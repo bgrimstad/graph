@@ -1,4 +1,4 @@
 graph
 =====
 
-C++ implementation of a bidirectional graph
+C++ class for bidirectional graphs
