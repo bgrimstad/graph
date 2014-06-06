@@ -132,23 +132,22 @@ int main()
     }
     cout << endl;
 
-    Graph<> g;
+    // Testing add functionality
+//    Graph<> g;
 
-    g.add_node(0,1.1);
-    g.add_node(1,2.2);
-    g.add_node(2,3.3);
+//    g.add_node(0,1.1);
+//    g.add_node(1,2.2);
+//    g.add_node(2,3.3);
 
-    g.add_edge(0,1,1);
-    g.add_edge(0,3,1);
-    g.add_edge(0,2,1);
-    g.add_edge(1,0,2);
-    g.add_edge(2,1,2);
+//    g.add_edge(0,1,1);
+//    g.add_edge(0,3,1);
+//    g.add_edge(0,2,1);
+//    g.add_edge(1,0,2);
+//    g.add_edge(2,1,2);
 
-    cout << g << endl;
+//    cout << g << endl;
 
-    //cout << g << endl;
-
-    cout << "Hello World!" << endl;
+//    cout << "Hello World!" << endl;
     return 0;
 }
 
