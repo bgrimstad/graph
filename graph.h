@@ -131,6 +131,7 @@ public:
         else
         {
             cout << "Node " << id << " already exist!" << endl;
+            return;
         }
     }
 
@@ -193,6 +194,7 @@ public:
         else
         {
             cout << "Cannot remove nonexistent edge!" << endl;
+            return;
         }
     }
 
