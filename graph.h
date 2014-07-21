@@ -14,17 +14,11 @@ using std::endl;
 template<class NodeData = double, class EdgeData = double>
 class Graph
 {
-    typedef unsigned int n_id; // Node id
-    typedef std::tuple<n_id,n_id> e_id; // Edge id is stored as tuple (from node id, to node id)
+    typedef unsigned int g_id;
 
-    // Key hash function for the edge id tuple (used later in the unordered_map)
-    struct key_hash : public std::unary_function<e_id, std::size_t>
-    {
-        std::size_t operator()(const e_id& id) const
-        {
-            return std::get<0>(id) ^ std::get<1>(id); // ^ std::get<2>(k);
-        }
-    };
+    // Internal counter for edge IDs
+    g_id next_edge_id;
+    g_id get_next_edge_id() { return next_edge_id++; }
 
     // Define node and edge structs
     struct Node;
@@ -34,34 +28,34 @@ class Graph
 
     struct Node
     {
-        n_id id;
+        g_id id;
         std::vector<edge_ptr> edges_in, edges_out; // edges_in needed?
         NodeData data;
 
-        Node(n_id id, NodeData data) : id(id), data(data) {}
+        Node(g_id id, NodeData data) : id(id), data(data) {}
 
-        bool has_link_to(n_id other_node) const
+        bool has_link_to(g_id other_node) const
         {
-            for(const auto e : edges_out)
+            for(const auto& e : edges_out)
                 if(e->to->id == other_node)
                     return true;
             return false;
         }
 
-        bool has_link_from(n_id other_node) const
+        bool has_link_from(g_id other_node) const
         {
-            for(const auto e : edges_out)
+            for(const auto& e : edges_out)
                 if(e->to->id == other_node)
                     return true;
             return false;
         }
 
-        void remove_edge_to(n_id other_node)
+        void remove_edge_to(g_id other_node)
         {
             edges_out.erase(std::remove_if(edges_out.begin(), edges_out.end(), [&other_node](edge_ptr e) { return e->to->id == other_node; }), edges_out.end());
         }
 
-        void remove_edge_from(n_id other_node)
+        void remove_edge_from(g_id other_node)
         {
             edges_in.erase(std::remove_if(edges_in.begin(), edges_in.end(), [&other_node](edge_ptr e) { return e->from->id == other_node; }), edges_in.end());
         }
@@ -83,18 +77,18 @@ class Graph
 
     struct Edge
     {
-        e_id id;
+        g_id id;
         node_ptr from, to;
         EdgeData data;
 
-        Edge(node_ptr from, node_ptr to, EdgeData data)
-            : id(e_id(from->id,to->id)), from(from), to(to), data(data) {}
+        Edge(g_id id, node_ptr from, node_ptr to, EdgeData data)
+            : id(id), from(from), to(to), data(data) {}
     };
 
     // Print function
     friend std::ostream& operator<<(std::ostream& os, const Graph<NodeData,EdgeData> &graph)
     {
-        for(const auto n : graph.nodes)
+        for(const auto& n : graph.nodes)
         {
             os << "Node " << n.first << "-> ";
             for(const auto e : n.second->edges_out)
@@ -106,20 +100,20 @@ class Graph
     }
 
 public:
-    Graph() {}
+    Graph() { next_edge_id = 0; }
 
     // Map of nodes and edges (using id as key)
-    std::unordered_map<n_id, node_ptr> nodes;
-    std::unordered_map<e_id, edge_ptr, key_hash> edges;
+    std::unordered_map<g_id, node_ptr> nodes;
+    std::unordered_map<g_id, edge_ptr> edges;
     // TODO: consider encapsulating the nodes and edges
 
-    void add_node(n_id id)
+    void add_node(g_id id)
     {
         // Assumes that NodeData() exists
         add_node(id, NodeData());
     }
 
-    void add_node(n_id id, NodeData data)
+    void add_node(g_id id, NodeData data)
     {
         if(!node_exists(id))
         {
@@ -129,16 +123,15 @@ public:
         else
         {
             cout << "Node " << id << " already exist!" << endl;
-            return;
         }
     }
 
-    void remove_node(n_id id)
+    void remove_node(g_id id)
     {
         if(node_exists(id))
         {
             // Remove all edges to and from node
-            for(auto n : nodes)
+            for(auto& n : nodes)
             {
                 //cout << n.first << endl;
                 if(edge_exists(n.first, id))
@@ -156,13 +149,13 @@ public:
         }
     }
 
-    void add_edge(n_id from, n_id to)
+    void add_edge(g_id from, g_id to)
     {
         // Assumes that EdgeData() exists
         add_edge(from, to, EdgeData());
     }
 
-    void add_edge(n_id from, n_id to, EdgeData data)
+    void add_edge(g_id from, g_id to, EdgeData data)
     {
         if(edge_exists(from, to))
         {
@@ -174,18 +167,20 @@ public:
         }
         else
         {
-            edge_ptr e(new Edge(nodes.at(from), nodes.at(to), data));
+            edge_ptr e(new Edge(get_next_edge_id(), nodes.at(from), nodes.at(to), data));
             edges.emplace(e->id,e);
             nodes.at(from)->edges_out.push_back(e);
             nodes.at(to)->edges_in.push_back(e);
         }
     }
 
-    void remove_edge(n_id from, n_id to)
+    void remove_edge(g_id from, g_id to)
     {
         if(edge_exists(from, to))
         {
-            edges.erase(e_id(from,to));
+            // TODO: remove this code duplication
+            auto edge_it = std::find_if(edges.begin(), edges.end(), [from,to](std::pair<g_id, edge_ptr> e){ return (e.second->from->id == from && e.second->to->id == to); });
+            if(edge_it != edges.end()) edges.erase(edge_it->first);
             nodes.at(from)->remove_edge_to(to);
             nodes.at(to)->remove_edge_from(from);
         }
@@ -196,14 +191,14 @@ public:
         }
     }
 
-    bool node_exists(n_id node) const
+    bool node_exists(g_id node) const
     {
         return !(nodes.find(node) == nodes.end());
     }
 
-    bool edge_exists(n_id from, n_id to) const
+    bool edge_exists(g_id from, g_id to) const
     {
-        return !(edges.find(e_id(from,to)) == edges.end());
+        return std::find_if(edges.begin(), edges.end(), [from,to](std::pair<g_id, edge_ptr> e){ return (e.second->from->id == from && e.second->to->id == to); }) != edges.end();
     }
 
 };

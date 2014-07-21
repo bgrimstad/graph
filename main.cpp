@@ -81,6 +81,7 @@ struct Data
 
 int main()
 {
+
     // Testing graph
     Graph<double,double> my_graph;
     for(int i=0; i<=5; i++)
