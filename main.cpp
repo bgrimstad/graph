@@ -71,6 +71,14 @@ void dijkstra(Graph<double,double> g, unsigned int source, unsigned int target, 
     return_prev = prev;
 }
 
+struct Data
+{
+    Data() { bar.reserve(100000); }
+    //~Data() { bar.clear(); }
+
+    std::vector<double> bar;
+};
+
 int main()
 {
     // Testing graph
@@ -148,6 +156,60 @@ int main()
 //    cout << g << endl;
 
 //    cout << "Hello World!" << endl;
+
+
+    // ANDERS START HER!
+    // Test for memory leaks
+    Graph<Data,Data> mem_graph; // Data is just a struct with an empty vector. The vector is reserved a lot of space.
+
+    // Add some initial nodes
+    int i = 0;
+    for(i = 0; i<10; i++)
+        mem_graph.add_node(i);
+
+    // A long loop where one node and one edge is added, and one node and one edge is removed
+    // Expecting stable memory usage
+    for(i; i<10000000; i++)
+    {
+        mem_graph.add_node(i);
+        mem_graph.add_edge(i-1,i);
+        mem_graph.remove_node(i-2);
+
+        int c = 0;
+        for(auto n : mem_graph.nodes)
+        {
+            c += n.second->edges_in.size();
+            c += n.second->edges_out.size();
+        }
+
+        // Print some debug info
+        cout << mem_graph.nodes.size() << " - " << mem_graph.edges.size() << " - " << c << " - " << mem_graph.nodes.bucket_count() << " - " << mem_graph.edges.bucket_count() << endl;
+    }
+
+    // Print buckets of nodes and edges map in graph
+
+    cout << "Nodes" << endl;
+    for (unsigned i=0; i<mem_graph.nodes.bucket_count(); ++i)
+    {
+        std::cout << "bucket #" << i << " contains: ";
+        for (auto it = mem_graph.nodes.begin(i); it!=mem_graph.nodes.end(i); ++it)
+        {
+            std::cout << "[" << it->first << "] ";
+        }
+        std::cout << "\n";
+    }
+
+    cout << "Edges" << endl;
+    for (unsigned i=0; i<mem_graph.edges.bucket_count(); ++i)
+    {
+        std::cout << "bucket #" << i << " contains: ";
+        for (auto it = mem_graph.edges.begin(i); it!=mem_graph.edges.end(i); ++it)
+        {
+            std::cout << "[" << std::get<0>(it->first) << "] ";
+        }
+        std::cout << "\n";
+    }
+
     return 0;
 }
 
