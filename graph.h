@@ -108,10 +108,10 @@ class Graph
 public:
     Graph() {}
 
-    // List of nodes (id used as key)
+    // Map of nodes and edges (using id as key)
     std::unordered_map<n_id, node_ptr> nodes;
     std::unordered_map<e_id, edge_ptr, key_hash> edges;
-    // TODO: encapsulate nodes
+    // TODO: consider encapsulating the nodes and edges
 
     void add_node(n_id id)
     {
