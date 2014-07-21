@@ -27,19 +27,18 @@ class Graph
     };
 
     // Define node and edge structs
-    struct node;
-    struct edge;
-    typedef std::shared_ptr<node> node_ptr;
-    typedef std::shared_ptr<edge> edge_ptr;
+    struct Node;
+    struct Edge;
+    typedef std::shared_ptr<Node> node_ptr;
+    typedef std::shared_ptr<Edge> edge_ptr;
 
-    struct node
+    struct Node
     {
         n_id id;
         std::vector<edge_ptr> edges_in, edges_out; // edges_in needed?
         NodeData data;
 
-        // Constructors
-        node(n_id id, NodeData data) : id(id), data(data) {}
+        Node(n_id id, NodeData data) : id(id), data(data) {}
 
         bool has_link_to(n_id other_node) const
         {
@@ -82,14 +81,13 @@ class Graph
         }
     };
 
-    struct edge
+    struct Edge
     {
         e_id id;
         node_ptr from, to;
         EdgeData data;
 
-        // Constructor here
-        edge(node_ptr from, node_ptr to, EdgeData data)
+        Edge(node_ptr from, node_ptr to, EdgeData data)
             : id(e_id(from->id,to->id)), from(from), to(to), data(data) {}
     };
 
@@ -125,7 +123,7 @@ public:
     {
         if(!node_exists(id))
         {
-            node_ptr n(new node(id,data));
+            node_ptr n(new Node(id,data));
             nodes.emplace(id, n);
         }
         else
@@ -176,7 +174,7 @@ public:
         }
         else
         {
-            edge_ptr e(new edge(nodes.at(from), nodes.at(to), data));
+            edge_ptr e(new Edge(nodes.at(from), nodes.at(to), data));
             edges.emplace(e->id,e);
             nodes.at(from)->edges_out.push_back(e);
             nodes.at(to)->edges_in.push_back(e);
