@@ -76,7 +76,7 @@ class Graph
         EdgeData data;
 
         // Constructor here
-        edge(node_ptr from, node_ptr to, NodeData data)
+        edge(node_ptr from, node_ptr to, EdgeData data)
             : from(from), to(to), data(data) {}
     };
 
