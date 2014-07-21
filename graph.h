@@ -17,7 +17,7 @@ class Graph
     typedef unsigned int n_id; // Node id
     typedef std::tuple<n_id,n_id> e_id; // Edge id is stored as tuple (from node id, to node id)
 
-    // A has function for the edge id tuple (used later in the unordered_map)
+    // Key hash function for the edge id tuple (used later in the unordered_map)
     struct key_hash : public std::unary_function<e_id, std::size_t>
     {
         std::size_t operator()(const e_id& id) const
