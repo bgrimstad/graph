@@ -64,7 +64,7 @@ class Graph
 
         void remove_edge_from(n_id other_node)
         {
-            edges_in.erase(std::remove_if(edges_in.begin(), edges_in.end(), [&other_node](edge_ptr e) { return e->to->id == other_node; }), edges_in.end());
+            edges_in.erase(std::remove_if(edges_in.begin(), edges_in.end(), [&other_node](edge_ptr e) { return e->from->id == other_node; }), edges_in.end());
         }
 
         bool is_source_node() const
