@@ -107,88 +107,89 @@ public:
     std::unordered_map<g_id, edge_ptr> edges;
     // TODO: consider encapsulating the nodes and edges
 
-    void add_node(g_id id)
+    bool add_node(g_id id)
     {
         // Assumes that NodeData() exists
-        add_node(id, NodeData());
+        return add_node(id, NodeData());
     }
 
-    void add_node(g_id id, NodeData data)
-    {
-        if(!node_exists(id))
-        {
-            node_ptr n(new Node(id,data));
-            nodes.emplace(id, n);
-        }
-        else
-        {
-            cout << "Node " << id << " already exist!" << endl;
-        }
-    }
-
-    void remove_node(g_id id)
+    bool add_node(g_id id, NodeData data)
     {
         if(node_exists(id))
         {
-            // Remove all edges to and from node
-            for(auto& n : nodes)
-            {
-                //cout << n.first << endl;
-                if(edge_exists(n.first, id))
-                    remove_edge(n.first, id);
-                if(edge_exists(id, n.first))
-                    remove_edge(id, n.first);
-            }
-
-            // Remove node
-            nodes.erase(id);
+            cout << "Node " << id << " already exist!" << endl;
+            return false;
         }
-        else
+
+        node_ptr n(new Node(id,data));
+        nodes.emplace(id, n);
+        return true;
+    }
+
+    bool remove_node(g_id id)
+    {
+        if(!node_exists(id))
         {
             cout << "Cannot remove nonexistent node!" << endl;
+            return false;
         }
+
+        // Remove all edges to and from node
+        for(auto& n : nodes)
+        {
+            //cout << n.first << endl;
+            if(edge_exists(n.first, id))
+                remove_edge(n.first, id);
+            if(edge_exists(id, n.first))
+                remove_edge(id, n.first);
+        }
+
+        // Remove node
+        nodes.erase(id);
+
+        return true;
     }
 
-    void add_edge(g_id from, g_id to)
+    bool add_edge(g_id from, g_id to)
     {
         // Assumes that EdgeData() exists
-        add_edge(from, to, EdgeData());
+        return add_edge(from, to, EdgeData());
     }
 
-    void add_edge(g_id from, g_id to, EdgeData data)
+    bool add_edge(g_id from, g_id to, EdgeData data)
     {
         if(edge_exists(from, to))
         {
             cout << "Edge already exist!" << endl;
+            return false;
         }
         else if(!node_exists(from) || !node_exists(to))
         {
             cout << "Nonexistent node(-s). Cannot add edge!" << endl;
+            return false;
         }
-        else
-        {
-            edge_ptr e(new Edge(get_next_edge_id(), nodes.at(from), nodes.at(to), data));
-            edges.emplace(e->id,e);
-            nodes.at(from)->edges_out.push_back(e);
-            nodes.at(to)->edges_in.push_back(e);
-        }
+
+        edge_ptr e(new Edge(get_next_edge_id(), nodes.at(from), nodes.at(to), data));
+        edges.emplace(e->id,e);
+        nodes.at(from)->edges_out.push_back(e);
+        nodes.at(to)->edges_in.push_back(e);
+        return true;
     }
 
-    void remove_edge(g_id from, g_id to)
+    bool remove_edge(g_id from, g_id to)
     {
-        if(edge_exists(from, to))
-        {
-            // TODO: remove this code duplication
-            auto edge_it = std::find_if(edges.begin(), edges.end(), [from,to](std::pair<g_id, edge_ptr> e){ return (e.second->from->id == from && e.second->to->id == to); });
-            if(edge_it != edges.end()) edges.erase(edge_it->first);
-            nodes.at(from)->remove_edge_to(to);
-            nodes.at(to)->remove_edge_from(from);
-        }
-        else
+        if(!edge_exists(from, to))
         {
             cout << "Cannot remove nonexistent edge!" << endl;
-            return;
+            return false;
         }
+
+        // TODO: remove this code duplication
+        auto edge_it = std::find_if(edges.begin(), edges.end(), [from,to](std::pair<g_id, edge_ptr> e){ return (e.second->from->id == from && e.second->to->id == to); });
+        if(edge_it != edges.end()) edges.erase(edge_it->first);
+        nodes.at(from)->remove_edge_to(to);
+        nodes.at(to)->remove_edge_from(from);
+        return true;
     }
 
     bool node_exists(g_id node) const
